@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRAINING LIBRARY | 野球部トレーニング動画</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deep:#081522; --mid:#0f2740; --blue:#1c4d73; --chalk:#eaf1f8;
+    --navy:#0b1a29; --gold:#e2b23a; --line:rgba(234,241,248,0.14);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:radial-gradient(ellipse 900px 500px at 50% -10%, rgba(226,178,58,0.09), transparent 60%),
+      linear-gradient(180deg, var(--deep), var(--mid) 65%);
+    color:var(--chalk); font-family:'Zen Kaku Gothic New', sans-serif; min-height:100vh; padding-bottom:80px;
+  }
+  .field-lines{position:fixed; inset:0; z-index:-1; opacity:0.05; pointer-events:none;
+    background-image:repeating-linear-gradient(90deg, var(--chalk) 0 1px, transparent 1px 120px);}
+  header{padding:56px 20px 32px; text-align:center; border-bottom:1px solid var(--line);}
+  .eyebrow{font-family:'Space Mono', monospace; letter-spacing:0.35em; font-size:11px; color:var(--gold); text-transform:uppercase; margin-bottom:14px;}
+  h1{font-family:'Anton', sans-serif; font-size:clamp(34px, 9vw, 64px); letter-spacing:0.02em; line-height:1; color:var(--chalk); text-shadow:0 2px 0 var(--blue);}
+  h1 span{color:var(--gold);}
+  .sub{margin-top:14px; font-size:14px; color:rgba(234,241,248,0.65); max-width:440px; margin-left:auto; margin-right:auto; line-height:1.7;}
+
+  .tabs{max-width:1000px; margin:26px auto 0; padding:0 20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .tab-btn{font-family:'Space Mono', monospace; font-size:12px; letter-spacing:0.08em; padding:10px 20px; border-radius:20px; border:1px solid var(--line); background:rgba(234,241,248,0.04); color:rgba(234,241,248,0.6); cursor:pointer; transition:all .15s;}
+  .tab-btn.active{background:var(--gold); border-color:var(--gold); color:var(--navy); font-weight:700;}
+
+  .controls{max-width:1000px; margin:28px auto 0; padding:0 20px;}
+  .search{width:100%; background:rgba(234,241,248,0.06); border:1px solid var(--line); border-radius:10px; color:var(--chalk); padding:14px 16px; font-family:'Zen Kaku Gothic New', sans-serif; font-size:15px; outline:none; transition:border-color .2s;}
+  .search:focus{border-color:var(--gold);}
+  .search::placeholder{color:rgba(234,241,248,0.4);}
+
+  .tag-groups{margin-top:22px; display:flex; flex-direction:column; gap:14px;}
+  .tag-group-label{font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.2em; color:rgba(234,241,248,0.45); text-transform:uppercase; margin-bottom:8px; display:block;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{font-family:'Space Mono', monospace; font-size:12px; padding:7px 13px; border-radius:20px; border:1px solid var(--line); background:rgba(0,0,0,0.15); color:rgba(234,241,248,0.75); cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; user-select:none;}
+  .chip:hover{border-color:rgba(226,178,58,0.5);}
+  .chip .dot{width:6px; height:6px; border-radius:50%; background:rgba(234,241,248,0.25); transition:all .15s;}
+  .chip.active{background:var(--gold); border-color:var(--gold); color:var(--navy); font-weight:700;}
+  .chip.active .dot{background:var(--navy); box-shadow:0 0 6px var(--navy);}
+
+  .reset-row{margin-top:14px; display:flex; justify-content:flex-end;}
+  .reset{font-family:'Space Mono', monospace; font-size:11px; color:rgba(234,241,248,0.5); background:none; border:none; cursor:pointer; text-decoration:underline; text-underline-offset:3px;}
+  .reset:hover{color:var(--gold);}
+
+  .count{max-width:1000px; margin:26px auto 0; padding:0 20px; font-family:'Space Mono', monospace; font-size:11px; color:rgba(234,241,248,0.4); letter-spacing:0.05em;}
+
+  .grid{max-width:1000px; margin:16px auto 0; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:20px;}
+  .card{background:linear-gradient(180deg, rgba(234,241,248,0.05), rgba(234,241,248,0.02)); border:1px solid var(--line); border-radius:14px; overflow:hidden; cursor:pointer; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;}
+  .card:hover{transform:translateY(-4px); border-color:rgba(226,178,58,0.45); box-shadow:0 14px 28px -14px rgba(0,0,0,0.6);}
+  .thumb{position:relative; aspect-ratio:16/9; background:var(--blue); overflow:hidden;}
+  .thumb img, .thumb video{width:100%; height:100%; object-fit:cover; display:block;}
+  .play{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+  .play span{width:46px; height:46px; border-radius:50%; background:rgba(11,26,41,0.7); border:1px solid rgba(234,241,248,0.4); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(2px);}
+  .play span::after{content:''; border-style:solid; border-width:8px 0 8px 13px; border-color:transparent transparent transparent var(--chalk); margin-left:3px;}
+  .card-body{padding:14px 16px 16px;}
+  .card-title{font-size:15px; font-weight:700; line-height:1.4; margin-bottom:8px;}
+  .card-tags{display:flex; flex-wrap:wrap; gap:6px;}
+  .card-tags span{font-family:'Space Mono', monospace; font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(226,178,58,0.12); color:var(--gold); border:1px solid rgba(226,178,58,0.25);}
+
+  .empty{max-width:1000px; margin:60px auto; padding:0 20px; text-align:center; color:rgba(234,241,248,0.4); font-family:'Space Mono', monospace; font-size:13px;}
+
+  #menuSection{display:none;}
+  .menu-intro{max-width:1000px; margin:28px auto 0; padding:0 20px; font-size:13px; color:rgba(234,241,248,0.55); line-height:1.7;}
+  .menu-grid{max-width:1000px; margin:20px auto 0; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:18px;}
+  .menu-card{background:linear-gradient(180deg, rgba(234,241,248,0.05), rgba(234,241,248,0.02)); border:1px solid var(--line); border-radius:14px; padding:20px; cursor:pointer; transition:transform .18s ease, border-color .18s ease;}
+  .menu-card:hover{transform:translateY(-4px); border-color:rgba(226,178,58,0.45);}
+  .menu-card-badge{font-family:'Space Mono', monospace; font-size:10px; color:var(--gold); letter-spacing:0.1em; margin-bottom:10px;}
+  .menu-card h3{font-size:17px; margin-bottom:8px;}
+  .menu-card p{font-size:12.5px; color:rgba(234,241,248,0.55); line-height:1.6;}
+
+  .overlay{position:fixed; inset:0; background:rgba(4,9,15,0.88); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; overflow-y:auto;}
+  .overlay.open{display:flex;}
+  .modal{width:100%; max-width:820px; background:var(--navy); border:1px solid var(--line); border-radius:14px; overflow:hidden; margin:auto;}
+  .modal-video{position:relative; width:100%; aspect-ratio:16/9; background:#000;}
+  .modal-video iframe, .modal-video video{width:100%; height:100%; border:0; display:block;}
+  .modal-info{padding:20px 22px 24px;}
+  .modal-info h3{font-family:'Zen Kaku Gothic New', sans-serif; font-size:18px; margin-bottom:14px;}
+  .modal-info .field{margin-bottom:14px;}
+  .modal-info .field-label{font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.15em; color:var(--gold); text-transform:uppercase; margin-bottom:5px; display:block;}
+  .modal-info p{font-size:13.5px; color:rgba(234,241,248,0.75); line-height:1.75;}
+  .modal-close{position:absolute; top:14px; right:14px; z-index:5; width:34px; height:34px; border-radius:50%; background:rgba(4,9,15,0.7); border:1px solid rgba(234,241,248,0.3); color:var(--chalk); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+
+  .menu-modal{width:100%; max-width:600px; background:var(--navy); border:1px solid var(--line); border-radius:14px; padding:26px 24px; margin:auto; position:relative;}
+  .menu-modal h3{font-size:20px; margin-bottom:6px;}
+  .menu-modal .menu-modal-desc{font-size:13px; color:rgba(234,241,248,0.55); margin-bottom:20px; line-height:1.6;}
+  .menu-list{list-style:none; display:flex; flex-direction:column; gap:10px;}
+  .menu-list li{display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:10px; background:rgba(234,241,248,0.04); border:1px solid var(--line); cursor:pointer; transition:border-color .15s;}
+  .menu-list li:hover{border-color:rgba(226,178,58,0.45);}
+  .menu-list .num{font-family:'Anton', sans-serif; font-size:20px; color:var(--gold); width:26px; text-align:center; flex-shrink:0;}
+  .menu-list .mi-title{font-size:14px; font-weight:700;}
+  .menu-list .mi-tags{font-family:'Space Mono', monospace; font-size:10px; color:rgba(234,241,248,0.45); margin-top:3px;}
+
+  @media (max-width:520px){header{padding:44px 16px 32px;}}
+</style>
+</head>
+<body>
+<div class="field-lines"></div>
+
+<header>
+  <div class="eyebrow">FOR ALL PLAYERS</div>
+  <h1>TRAINING <span>LIBRARY</span></h1>
+  <p class="sub">正しいフォームを、いつでも自分のペースで確認できるように。タグをタップして絞り込めます。</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tabVideos">動画一覧</button>
+  <button class="tab-btn" id="tabMenus">トレーニングメニュー</button>
+</div>
+
+<div id="videoSection">
+  <div class="controls">
+    <input class="search" id="search" type="text" placeholder="動画を検索(例:スクワット、体幹、ストレッチ)">
+    <div class="tag-groups" id="tagGroups"></div>
+    <div class="reset-row"><button class="reset" id="resetBtn">絞り込みをリセット</button></div>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none;">該当する動画が見つかりません</div>
+</div>
+
+<div id="menuSection">
+  <p class="menu-intro">練習メニューごとに動画をまとめたプレイリストです。カードをタップすると順番に確認できます。</p>
+  <div class="menu-grid" id="menuGrid"></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-video" id="modalVideo"><button class="modal-close" id="modalClose">✕</button></div>
+    <div class="modal-info">
+      <h3 id="modalTitle"></h3>
+      <div class="field" id="modalPurposeField"><span class="field-label">目的</span><p id="modalPurpose"></p></div>
+      <div class="field" id="modalCautionField"><span class="field-label">注意点</span><p id="modalCaution"></p></div>
+      <div class="field" id="modalDescField"><span class="field-label">メモ</span><p id="modalDesc"></p></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="menuOverlay">
+  <div class="menu-modal">
+    <button class="modal-close" id="menuModalClose">✕</button>
+    <h3 id="menuModalTitle"></h3>
+    <p class="menu-modal-desc" id="menuModalDesc"></p>
+    <ul class="menu-list" id="menuModalList"></ul>
+  </div>
+</div>
+
+<script>
+/* =====================================================================================
+   ▼▼▼ ここから動画を追加してください ▼▼▼
+   Claudeに「この動画を追加して」と頼めば、この配列を編集してファイルを作り直します。
+
+   【コピー用テンプレート】
+   {
+     title: "動画のタイトル",
+     genre: ["ウエイトトレーニング"],
+     part:  ["体幹"],   // 上腕 / 前腕 / 胸 / 肩 / 背中 / 体幹 / 大腿 / 下腿 / 足首
+     type:  "youtube",  // YouTubeなら "youtube" / 動画ファイルなら "file"
+     id:    "YOUTUBE_VIDEO_ID",
+     url:   "",
+     purpose: "目的",
+     caution: "注意点",
+     desc:    "補足メモ(任意)"
+   },
+===================================================================================== */
+const VIDEOS = [
+  {
+    title: "体幹アンチローテーション ドリル",
+    genre: ["ウエイトトレーニング", "コンディショニング"],
+    part: ["体幹"],
+    type: "youtube",
+    id: "YOUTUBE_VIDEO_ID_2",
+    url: "",
+    purpose: "回旋動作の土台となる体幹の安定性(抗回旋力)を高める。",
+    caution: "骨盤や腰が一緒に回らないようにキープする。",
+    desc: "投球・打撃の土台作りに。"
+  },
+  {
+    title: "ベンチプレス",
+    genre: ["ウエイトトレーニング"],
+    part: ["胸", "肩"],
+    type: "youtube",
+    id: "yJ3uouKXK94",
+    url: "",
+    purpose: "",
+    caution: "肩への負担が大きくなるため手幅は広くしすぎず、脇を少し締めるイメージ。アーチは必ずしも組まなくて良い。",
+    desc: ""
+  },
+  {
+    title: "懸垂",
+    genre: ["ウエイトトレーニング"],
+    part: ["背中", "上腕"],
+    type: "youtube",
+    id: "my1jIOgHb6E",
+    url: "",
+    purpose: "",
+    caution: "肩甲骨を内下方に締め、足は後ろへ、肘は外側に向ける。引き上げる際は首をすくめず、胸を張り、上まで引き切る。懸垂ができない場合は、ジャンプして体を引き上げた姿勢からスタートし、できるだけゆっくり肘を伸ばしていく。",
+    desc: ""
+  },
+  {
+    title: "ワンハンドダンベルロウ",
+    genre: ["ウエイトトレーニング"],
+    part: ["背中", "上腕"],
+    type: "youtube",
+    id: "B9-XAYRztik",
+    url: "",
+    purpose: "",
+    caution: "背中を真っ直ぐに保ち、胸は真下を向ける。手の向きに注意する。引く際は尻を動かさず、骨盤の方へ引き、頭を上げない。",
+    desc: ""
+  },
+  {
+    title: "スクワット",
+    genre: ["ウエイトトレーニング"],
+    part: ["大腿", "下腿"],
+    type: "youtube",
+    id: "Y6y04SF25k0",
+    url: "",
+    purpose: "",
+    caution: "足は肩幅に開き、重心は真ん中、胸を張る。しゃがむ際はすねと体幹を平行に、太ももと床が平行になるまで下げ、目線は真っ直ぐ前を見る。",
+    desc: ""
+  },
+  {
+    title: "デッドリフト",
+    genre: ["ウエイトトレーニング"],
+    part: ["背中", "大腿"],
+    type: "youtube",
+    id: "N955GogNwIE",
+    url: "",
+    purpose: "",
+    caution: "真っ直ぐ立ち、足は肩幅、胸を張る。動作中は背中を真っ直ぐに保ち、スネは床に垂直、尻は高い位置をキープしながら後ろへ引く。ベンチプレス・スクワット・デッドリフトの3種目は1週間の中で必ず全て行うが、スクワットとデッドリフトは負荷が高いため同じ日に行わない。",
+    desc: ""
+  },
+  {
+    title: "ブルガリアンスクワット",
+    genre: ["ウエイトトレーニング"],
+    part: ["大腿", "下腿"],
+    type: "youtube",
+    id: "xwE-3aHFJpg",
+    url: "",
+    purpose: "",
+    caution: "体は前傾させ、重心は前足の上に置き、手は太ももの横に添える。動作中は前傾角度をキープしたまま前足で床を押し、斜め後ろにゆっくり下がる。",
+    desc: ""
+  },
+  {
+    title: "ワンハンドダンベルプレス",
+    genre: ["ウエイトトレーニング"],
+    part: ["胸", "肩", "体幹"],
+    type: "youtube",
+    id: "0aSMzJwM26M",
+    url: "",
+    purpose: "",
+    caution: "反対側の手足を挙げ、股関節90°・膝90°をキープしながら腰を下へ押し当てる。プレスの際は肘を張らず、肩より下まで下げず、体の向きを変えない。",
+    desc: ""
+  },
+  {
+    title: "プッシュアップ&シングルダウンドッグ",
+    genre: ["ウエイトトレーニング", "ストレッチ"],
+    part: ["胸", "肩", "体幹"],
+    type: "youtube",
+    id: "IS8MBDAD4f8",
+    url: "",
+    purpose: "",
+    caution: "プッシュアップは体のラインを真っ直ぐに保ち、胸を地面につける。シングルダウンドッグは地面をしっかり押し、肘を曲げずに反対側のつま先を触る。",
+    desc: ""
+  }
+];
+/* ▲▲▲ 動画の追加はここまで ▲▲▲ ===================================================== */
+
+
+/* =====================================================================================
+   ▼▼▼ ここからメニュー(プレイリスト)を追加してください ▼▼▼
+===================================================================================== */
+const MENUS = [
+  {
+    name: "上半身①",
+    desc: "",
+    videos: ["ベンチプレス", "ワンハンドダンベルプレス", "プッシュアップ&シングルダウンドッグ"]
+  },
+  {
+    name: "上半身②",
+    desc: "",
+    videos: ["懸垂", "ワンハンドダンベルロウ"]
+  },
+  {
+    name: "下半身",
+    desc: "",
+    videos: ["スクワット", "ブルガリアンスクワット", "デッドリフト"]
+  }
+];
+/* ▲▲▲ メニューの追加はここまで ▲▲▲ =================================================== */
+
+const ALL_PARTS = ["上腕","前腕","胸","肩","背中","体幹","大腿","下腿","足首"];
+const ALL_GENRES = [...new Set(VIDEOS.flatMap(v => v.genre))];
+let activeGenres = new Set();
+let activeParts = new Set();
+let searchText = "";
+
+function youtubeThumb(id){ return `https://img.youtube.com/vi/${id}/hqdefault.jpg`; }
+function findVideoByTitle(title){ return VIDEOS.find(v => v.title === title); }
+
+document.getElementById('tabVideos').onclick = () => switchTab('videos');
+document.getElementById('tabMenus').onclick = () => switchTab('menus');
+function switchTab(tab){
+  document.getElementById('tabVideos').classList.toggle('active', tab === 'videos');
+  document.getElementById('tabMenus').classList.toggle('active', tab === 'menus');
+  document.getElementById('videoSection').style.display = tab === 'videos' ? 'block' : 'none';
+  document.getElementById('menuSection').style.display = tab === 'menus' ? 'block' : 'none';
+}
+
+function buildChipGroup(label, allTags, activeSet){
+  const groupEl = document.createElement('div');
+  const chipsEl = document.createElement('div');
+  chipsEl.className = 'chips';
+  const labelEl = document.createElement('span');
+  labelEl.className = 'tag-group-label';
+  labelEl.textContent = label;
+  groupEl.appendChild(labelEl); groupEl.appendChild(chipsEl);
+  allTags.forEach(tag => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (activeSet.has(tag) ? ' active' : '');
+    el.innerHTML = `<span class="dot"></span>${tag}`;
+    el.onclick = () => { activeSet.has(tag) ? activeSet.delete(tag) : activeSet.add(tag); renderChips(); renderGrid(); };
+    chipsEl.appendChild(el);
+  });
+  return groupEl;
+}
+function renderChips(){
+  const wrap = document.getElementById('tagGroups');
+  wrap.innerHTML = '';
+  wrap.appendChild(buildChipGroup('ジャンル', ALL_GENRES, activeGenres));
+  wrap.appendChild(buildChipGroup('部位', ALL_PARTS, activeParts));
+}
+function filteredVideos(){
+  return VIDEOS.filter(v => {
+    const matchesGenre = activeGenres.size === 0 || v.genre.some(t => activeGenres.has(t));
+    const matchesPart = activeParts.size === 0 || v.part.some(t => activeParts.has(t));
+    const allTagsText = [...v.genre, ...v.part].join(' ').toLowerCase();
+    const matchesSearch = !searchText || v.title.toLowerCase().includes(searchText) || allTagsText.includes(searchText);
+    return matchesGenre && matchesPart && matchesSearch;
+  });
+}
+function renderGrid(){
+  const list = filteredVideos();
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('count');
+  count.textContent = `${list.length} / ${VIDEOS.length} 本の動画`;
+  grid.innerHTML = '';
+  empty.style.display = list.length ? 'none' : 'block';
+  list.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const thumbInner = v.type === 'youtube'
+      ? `<img src="${youtubeThumb(v.id)}" alt="${v.title}">`
+      : `<video src="${v.url}" muted preload="metadata"></video>`;
+    card.innerHTML = `
+      <div class="thumb">${thumbInner}<div class="play"><span></span></div></div>
+      <div class="card-body">
+        <div class="card-title">${v.title}</div>
+        <div class="card-tags">${[...v.genre, ...v.part].map(t => `<span>${t}</span>`).join('')}</div>
+      </div>`;
+    card.onclick = () => openModal(v);
+    grid.appendChild(card);
+  });
+}
+function openModal(v){
+  const overlay = document.getElementById('overlay');
+  const modalVideo = document.getElementById('modalVideo');
+  document.getElementById('modalTitle').textContent = v.title;
+  document.getElementById('modalPurposeField').style.display = v.purpose ? 'block' : 'none';
+  document.getElementById('modalPurpose').textContent = v.purpose || '';
+  document.getElementById('modalCautionField').style.display = v.caution ? 'block' : 'none';
+  document.getElementById('modalCaution').textContent = v.caution || '';
+  document.getElementById('modalDescField').style.display = v.desc ? 'block' : 'none';
+  document.getElementById('modalDesc').textContent = v.desc || '';
+  const player = v.type === 'youtube'
+    ? `<iframe src="https://www.youtube.com/embed/${v.id}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
+    : `<video src="${v.url}" controls autoplay></video>`;
+  modalVideo.innerHTML = `<button class="modal-close" id="modalClose">✕</button>` + player;
+  document.getElementById('modalClose').onclick = closeModal;
+  overlay.classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('modalVideo').innerHTML = '<button class="modal-close" id="modalClose">✕</button>';
+}
+document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
+
+document.getElementById('search').addEventListener('input', (e) => { searchText = e.target.value.trim().toLowerCase(); renderGrid(); });
+document.getElementById('resetBtn').addEventListener('click', () => {
+  activeGenres.clear(); activeParts.clear(); searchText = '';
+  document.getElementById('search').value = '';
+  renderChips(); renderGrid();
+});
+
+function renderMenus(){
+  const menuGrid = document.getElementById('menuGrid');
+  menuGrid.innerHTML = '';
+  MENUS.forEach(menu => {
+    const card = document.createElement('div');
+    card.className = 'menu-card';
+    card.innerHTML = `<div class="menu-card-badge">${menu.videos.length}本の動画</div><h3>${menu.name}</h3><p>${menu.desc || ''}</p>`;
+    card.onclick = () => openMenuModal(menu);
+    menuGrid.appendChild(card);
+  });
+}
+function openMenuModal(menu){
+  document.getElementById('menuModalTitle').textContent = menu.name;
+  document.getElementById('menuModalDesc').textContent = menu.desc || '';
+  const list = document.getElementById('menuModalList');
+  list.innerHTML = '';
+  menu.videos.forEach((title, idx) => {
+    const v = findVideoByTitle(title);
+    const li = document.createElement('li');
+    if (!v){
+      li.innerHTML = `<span class="num">${idx + 1}</span><div><div class="mi-title">${title}(見つかりません)</div></div>`;
+    } else {
+      li.innerHTML = `<span class="num">${idx + 1}</span><div><div class="mi-title">${v.title}</div><div class="mi-tags">${[...v.genre, ...v.part].join(' / ')}</div></div>`;
+      li.onclick = () => { closeMenuModal(); openModal(v); };
+    }
+    list.appendChild(li);
+  });
+  document.getElementById('menuOverlay').classList.add('open');
+}
+function closeMenuModal(){ document.getElementById('menuOverlay').classList.remove('open'); }
+document.getElementById('menuModalClose').onclick = closeMenuModal;
+document.getElementById('menuOverlay').addEventListener('click', (e) => { if (e.target.id === 'menuOverlay') closeMenuModal(); });
+
+renderChips();
+renderGrid();
+renderMenus();
+</script>
+</body>
+</html>
